@@ -23,6 +23,37 @@ from collections import Counter
 import copy
 from scipy import stats
 from sklearn import metrics
+#*******************************************************
+# roc_auc_score: Compute Area Under the Receiver Operating
+# Characteristic Curve (ROC AUC) from prediction scores.
+#----------------------------------------------------------
+# average_precision_score: summarizes a precision-recall curve as the
+# weighted mean of precisions achieved at each threshold, with the
+# increase in recall from the previous threshold used as the weight.
+#-----------------------------------------------------------
+# metrics.roc_curve: The function roc_curve computes the receiver operating
+# characteristic curve, or ROC curve.
+# Returns:
+# fpr ndarray of shape (>2,)
+# Increasing false positive rates such that element i is the false positive rate
+# of predictions with score >= thresholds[i].
+#
+# tpr ndarray of shape (>2,)
+# Increasing true positive rates such that element i is the true positive rate
+# of predictions with score >= thresholds[i].
+#
+# thresholds  ndarray of shape (n_thresholds,)
+# Decreasing thresholds on the decision function used to compute fpr and tpr.
+# The first threshold is set to np.inf
+#
+# A receiver operating characteristic (ROC), or simply ROC curve,
+# is a graphical plot which illustrates the performance of a binary
+# classifier system as its discrimination threshold is varied.
+# It is created by plotting the fraction of true positives out
+# of the positives (TPR = true positive rate) vs. the fraction
+# of false positives out of the negatives (FPR = false positive rate),
+# at various threshold settings. TPR is also known as sensitivity,
+# and FPR is one minus the specificity or true negative rate.”
 
 def performance_calculator(y_true, y_pred):
     auc = metrics.roc_auc_score(y_true, y_pred)
@@ -82,7 +113,7 @@ if __name__ == "__main__":
                   'CancerType14', 'CancerType15', 'CancerType16'] + [phenoNA] + ['CancerType']
 
     print('Raw data processing ...')
-    dataALL_fn = '../02.Input/AllData.xlsx'
+    dataALL_fn = '02.Input/AllData.xlsx'
     dataChowell_Train0 = pd.read_excel(dataALL_fn, sheet_name='Chowell_train', index_col=0)
     if cancer_type == 'nonNSCLC':
         dataChowell_Train0 = dataChowell_Train0.loc[dataChowell_Train0['CancerType']!='NSCLC',:]
@@ -98,6 +129,7 @@ if __name__ == "__main__":
     dataChowell_Train['NLR'] = [c if c < NLR_upper else NLR_upper for c in dataChowell_Train['NLR']]
 
     print('Chowell patient number (training): ', dataChowell_Train.shape[0])
+    # count the number of 0 and 1 responses in the dataset and calculate ratio
     counter = Counter(dataChowell_Train[phenoNA])
     pos_weight = counter[0] / counter[1]
     print('  Phenotype name: ', phenoNA)
@@ -118,16 +150,25 @@ if __name__ == "__main__":
         y_test = data_test[phenoNA]
         x_train6LR = pd.DataFrame(data_train, columns=featuresNA6_LR)
         x_test6LR = pd.DataFrame(data_test, columns=featuresNA6_LR)
-
+        #Standardize features by removing the mean and scaling to unit variance.
         scaler_sd = StandardScaler()  # StandardScaler()
         x_train6LR = scaler_sd.fit_transform(x_train6LR)
+        #record the mean and std for the training set
         LLR_params10000[0].append(list(scaler_sd.mean_))
         LLR_params10000[1].append(list(scaler_sd.scale_))
         x_test6LR = scaler_sd.transform(x_test6LR)
 
         ############# Logistic LASSO Regression model #############
+        # Provide "param_dict_LLR" dictionary as an input to the LogisticRegression function
+        # to set the parameters of the function
+
         clf = linear_model.LogisticRegression(**param_dict_LLR).fit(x_train6LR, y_train)
+
+        # The predict_proba method returns the predicted probabilities of each
+        # input sample
+
         y_test_pred  = clf.predict_proba(x_test6LR)[:,1]
+
         try:
             performance_test.append(performance_calculator(y_test, y_test_pred))
         except:
@@ -149,7 +190,7 @@ if __name__ == "__main__":
         LLR_params10000[4].append(p_values[1:]+[p_values[0]])
     performance_test_mean = np.mean(performance_test)
     performance_test_std = np.std(performance_test)
-    fnOut = open('../03.Results/6features/PanCancer/PanCancer_'+cancer_type+'_'+LLRmodelNA+'_10k_ParamCalculate.txt', 'w',
+    fnOut = open('03.Results/6features/PanCancer/PanCancer_'+cancer_type+'_'+LLRmodelNA+'_10k_ParamCalculate.txt', 'w',
                  buffering=1)
     for i in range(5):
         LLR_params10000[i] = list(zip(*LLR_params10000[i]))
