@@ -43,7 +43,7 @@ if __name__ == "__main__":
     xy_colNAs = featuresNA + [phenoNA]
 
     print('Raw data processing ...')
-    dataALL_fn = '../../02.Input/AllData.xlsx'
+    dataALL_fn = '02.Input/AllData.xlsx'
     dataChowell_Train0 = pd.read_excel(dataALL_fn, sheet_name='Chowell_train', index_col=0)
     dataChowell_Train1 = pd.read_excel(dataALL_fn, sheet_name='Chowell_test', index_col=0)
 
@@ -110,7 +110,7 @@ if __name__ == "__main__":
         p_values = [2 * (1 - stats.t.cdf(np.abs(i), (len(newX) - len(newX[0])))) for i in ts_b]
         LR_params10000[4].append(p_values[1:] + [p_values[0]])
 
-    fnOut = open('../../03.Results/16features/NSCLC/NSCLC_'+LLRmodelNA+'_10k_ParamCalculate.txt', 'w', buffering=1)
+    fnOut = open('03.Results/16features/NSCLC/NSCLC_'+LLRmodelNA+'_10k_ParamCalculate.txt', 'w', buffering=1)
     for i in range(5):
         LR_params10000[i] = list(zip(*LR_params10000[i]))
         LR_params10000[i] = [np.mean(c) for c in LR_params10000[i]]

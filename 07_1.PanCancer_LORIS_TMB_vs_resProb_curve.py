@@ -34,18 +34,18 @@ if __name__ == "__main__":
 
     start_time = time.time()
     print('Raw data read in ...')
-    fnIn = '../03.Results/' +Plot_type+ '_LLR6_Scaler(StandardScaler)_prediction.xlsx'
+    fnIn = '03.Results/' +Plot_type+ '_LLR6_Scaler(StandardScaler)_prediction.xlsx'
     y_pred_LLR6 = []
     y_true = []
     start_set = 1
     end_set = 3
-    output_curve_fn = '../03.Results/LLR6_LORIS_vs_ORR_'+Plot_type+'.png'
+    output_curve_fn = '03.Results/LLR6_LORIS_vs_ORR_'+Plot_type+'.png'
     for sheet_i in range(start_set,end_set): # range(start_set,3)
         data = pd.read_excel(fnIn, sheet_name=str(sheet_i), header=0, index_col=0)
         y_pred_LLR6.extend(data['y_pred'].tolist())
         y_true.extend(data['y'].tolist())
 
-    fnIn = '../03.Results/' + 'TMB_Scaler(None)_prediction.xlsx'
+    fnIn = '03.Results/' + 'TMB_Scaler(None)_prediction.xlsx'
     y_pred_TMB = []
     for sheet_i in range(start_set,end_set):
         data = pd.read_excel(fnIn, sheet_name=str(sheet_i), header=0, index_col=0)
@@ -209,9 +209,9 @@ if __name__ == "__main__":
         print(score_list_TMB[i], TMBhigh_ORR_mean[i], TMBlow_ORR_mean[i], TMB_ORR_mean[i], TMBlow_patientRatio_mean[i])
 
     df = pd.DataFrame({'LLR6_score': score_list_LLR6, 'Prob_mean': LLR6_ORR_mean, 'Prob_lower': LLR6_ORR_05, 'Prob_upper': LLR6_ORR_95})
-    df.to_csv('../03.Results/source_data_fig05a.csv', index=False)
+    df.to_csv('03.Results/source_data_fig05a.csv', index=False)
     df = pd.DataFrame({'TMB': score_list_TMB, 'Prob_mean': TMB_ORR_mean, 'Prob_lower': TMB_ORR_05, 'Prob_upper': TMB_ORR_95})
-    df.to_csv('../03.Results/source_data_fig05b.csv', index=False)
+    df.to_csv('03.Results/source_data_fig05b.csv', index=False)
 
 
     ############# Score-Prob curve ##############

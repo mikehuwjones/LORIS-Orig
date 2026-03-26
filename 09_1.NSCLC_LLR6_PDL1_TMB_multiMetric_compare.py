@@ -13,13 +13,14 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-
+import csv
 import sklearn.neighbors._base
 sys.modules['sklearn.neighbors.base'] = sklearn.neighbors._base
 from sklearn import linear_model
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import roc_curve, precision_recall_curve, auc, confusion_matrix, roc_auc_score
 from sklearn.utils import resample
+
 
 plt.rcParams.update({'font.size': 10})
 plt.rcParams["font.family"] = "Arial"
@@ -81,7 +82,7 @@ if __name__ == "__main__":
                   'CancerType14', 'CancerType15', 'CancerType16'] + [phenoNA]
 
     print('Raw data processing ...')
-    dataALL_fn = '../02.Input/AllData.xlsx'
+    dataALL_fn = '02.Input/AllData.xlsx'
     dataChowellTrain = pd.read_excel(dataALL_fn, sheet_name='Chowell_train', index_col=0)
     dataChowellTest = pd.read_excel(dataALL_fn, sheet_name='Chowell_test', index_col=0)
     dataChowell = pd.concat([dataChowellTrain,dataChowellTest],axis=0)
@@ -93,11 +94,38 @@ if __name__ == "__main__":
     dataRavi = pd.read_excel(dataALL_fn, sheet_name='Ravi_NSCLC', index_col=0)
 
     dataALL = [dataChowell, dataMSK1, dataLee, dataVanguri, dataRavi]
+    # mhj dataALL is a list of dataframes, each dataframe built up from the input excel sheets
+    # loop through the list of dataframes, filtering out Cancertype NSCLC and sorting
+    # all dataframes to have the same headings at the end of the loop: from xy_colNAs
+    # TMB PDL1_TPS% Systemic_therapy_history Albumin NLR Age and CancerType(s) .. + response
+    # finally, all NA's are dropped.
+
+    # **MHJ Start
+    # preserve the extra columns in a list of dataframes
+    #dataSave = []
+    #for i in dataALL:
+    #    dataSave.append(
+    #        pd.DataFrame(i, columns=['PFS_Months', 'PFS_Event', 'OS_Months', 'OS_Event', 'Sex','CancerType']))
+    #============================
+    dataSave = [df.copy() for df in dataALL]
+    # *MHJStop
 
     for i in range(len(dataALL)):
         dataALL[i] = dataALL[i].loc[dataALL[i]['CancerType']=='NSCLC',]
         dataALL[i] = dataALL[i][xy_colNAs].astype(float)
         dataALL[i] = dataALL[i].dropna(axis=0)
+
+    #MHJ start - reproduce the filtering as per dataALL. This is a bit fiddly because we need to exclude
+    # the extra columns from the df before filtering on the columns and removing NAs, but make sure
+    # the extra columns are added back for the rows that remain.
+    for j in range(len(dataSave)):
+        dataSave[j] = dataSave[j].loc[dataSave[j]['CancerType']=='NSCLC',]
+        temp = dataSave[j][xy_colNAs]
+        mask1 = temp.isna()
+        mask2 = np.sum(mask1, axis=1)
+        mask3 = mask2 > 0
+        dataSave[j] = dataSave[j][~mask3]
+    #MHJ Stop
 
     # truncate TMB
     TMB_upper = 50
@@ -125,6 +153,13 @@ if __name__ == "__main__":
     TMB_test_list =[]
     PDL1_test_list = []
     y_test_list = []
+
+    # pull out the featuresNA columns from each of the dataframes and append to
+    # x_test_list AS dataframes (so still a list of dataframes)
+    # pull out corresponding (actual) responses and append to y_test_list
+    # pull out JUST the TMB values for the TMB_test_list and pull out JUST
+    # the PDL1_TPS values for the PDL1_test_list
+
     for c in dataALL:
         x_test_list.append(pd.DataFrame(c, columns=featuresNA))
         y_test_list.append(c[phenoNA])
@@ -160,9 +195,12 @@ if __name__ == "__main__":
     OddsRatio_TMB = []
 
     ###################### Read in LLR model params ######################
-    fnIn = '../03.Results/16features/NSCLC/NSCLC_'+LLRmodelNA+'_10k_ParamCalculate.txt'
+    fnIn = '03.Results/16features/NSCLC/NSCLC_'+LLRmodelNA+'_10k_ParamCalculate.txt'
+    # LLRModelNA is hardwred to LLR6
+    # There are 6 values for the mean, 6 for the scale etc and these placed into a
+    # dictionary below
     if LLRmodelNA == 'LLR6Pan':
-        fnIn = '../03.Results/6features/PanCancer/PanCancer_LLR6_10k_ParamCalculate.txt'
+        fnIn = '03.Results/6features/PanCancer/PanCancer_all_LLR6_10k_ParamCalculate.txt'
     params_data = open(fnIn,'r').readlines()
     params_dict = {}
     for line in params_data:
@@ -177,36 +215,68 @@ if __name__ == "__main__":
     x_test_scaled_list = []
     scaler_sd = StandardScaler()
     scaler_sd.fit(x_test_list[0][featuresNA])
-    scaler_sd.mean_ = np.array(params_dict['LLR_mean'])
+    scaler_sd.mean_ = np.array(params_dict['LLR_mean']) # is this ignoring the Scalar calc. mean ?
     scaler_sd.scale_ = np.array(params_dict['LLR_scale'])
+    #loop through all the dataframes and scale the data as you go. Resulting scaled data in
+    # x_test_scaled_list
     for c in x_test_list:
         x_test_scaled_list.append(pd.DataFrame(scaler_sd.transform(c[featuresNA])))
+
+    # train the LR model based on the initial dataframe x_test_scaled_list[0] and the
+    # initial actual responses y_test_list[0]
 
     clf = linear_model.LogisticRegression().fit(x_test_scaled_list[0], y_test_list[0])
     clf.coef_ = np.array([params_dict['LLR_coef']])
     clf.intercept_ = np.array(params_dict['LLR_intercept'])
 
     print('LLR6_meanParams10000:')
-    fnOut = '../03.Results/NSCLC_' + LLRmodelNA + '_Scaler(' + 'StandardScaler' + ')_prediction.xlsx'
+    fnOut = '03.Results/NSCLC_' + LLRmodelNA + '_Scaler(' + 'StandardScaler' + ')_prediction.xlsx'
     dataALL[0].to_excel(fnOut, sheet_name='0')
+    # *************************************
+    csvfile1 = open('testLLR6.csv', 'w', newline='')
+    dLLR6writer = csv.writer(csvfile1, delimiter=',')
+    dLLR6writer.writerow(['tn', 'fp', 'fn', 'tp'])
+    # *************************************
+    #loop through the data in the scaled list of dataframes, placing the predicted values
+    # into y_pred_test. THESE are PROBABILITIES
+
+    # *MHJ Start
+    dataOUT = []
+    # *MHJ Stop
+
     for i in range(len(x_test_scaled_list)):
         y_pred_test = clf.predict_proba(x_test_scaled_list[i])[:, 1]
+        # add the prediction to the dataframe as column 'LLR6' then print out the
+        # dataframe as a csv file
         dataALL[i][LLRmodelNA] = y_pred_test
-        dataALL[i].to_csv('../03.Results/NSCLCmodel_'+LLRmodelNA+'_Dataset'+str(i+1)+'.csv', index=True)
+        #MHJ Start
+        #dataALL[i].to_csv('03.Results/NSCLCmodel_'+LLRmodelNA+'_Dataset'+str(i+1)+'.csv', index=True)
+        dataAdd = dataSave[i][['PFS_Months','PFS_Event','Sex','OS_Months','OS_Event']]
+        dataOUT = pd.concat([dataALL[i],dataAdd ], axis=1)
+        dataOUT.to_csv('03.Results/NSCLCmodel_'+LLRmodelNA+'_Dataset'+str(i+1)+'.csv', index=True)
+        #MHJ Stop
+
         AUC_test, score_test = AUC_calculator(y_test_list[i], y_pred_test)
         print('   Dataset %d: %5.3f (n=%d) %8.3f' % (i+1, AUC_test, len(y_pred_test), score_test))
-
+        #pull out the actual responses and the predictions into 'content' and then rename
+        # the columns to y and y_pred.
+        # output the column data to file with the dataframe number in the list as the
+        # sheet name
         content = dataALL[i].loc[:,['Response',LLRmodelNA]]
         content.rename(columns=dict(zip(content.columns, ['y','y_pred'])), inplace=True)
         with pd.ExcelWriter(fnOut, engine="openpyxl", mode='a',if_sheet_exists="replace") as writer:
             content.to_excel(writer, sheet_name=str(i))
-
+        # set the positive cutoff at 0.44 for LLR6 and convert the data, placing in y_pred_01
+        # y_pred_01 is used for the confusion matrix together with y_test_list
         if fix_cutoff:
             score = cutoff_value_LLR6
         else:
             AUC, score = AUC_calculator(y_test_list[i], y_pred_test)
         y_pred_01 = [int(c >= score) for c in y_pred_test]
         tn, fp, fn, tp = confusion_matrix(y_test_list[i], y_pred_01).ravel()
+        #********************************
+        dLLR6writer.writerow([tn, fp, fn, tp])
+        #********************************
         Sensitivity = tp / (tp + fn)
         Specificity = tn / (tn + fp)
         Accuracy = (tp + tn) / (tp + tn + fp + fn)
@@ -228,12 +298,29 @@ if __name__ == "__main__":
     modelNA = 'PDL1'
 
     print('PDL1:')
-    fnOut = '../03.Results/NSCLC_' + modelNA + '_Scaler(' + 'None' + ')_prediction.xlsx'
+    fnOut = '03.Results/NSCLC_' + modelNA + '_Scaler(' + 'None' + ')_prediction.xlsx'
     dataALL[0].to_excel(fnOut, sheet_name='0')
+    # *************************************
+    csvfile2 = open('testPDL1.csv', 'w', newline='')
+    dPDL1writer = csv.writer(csvfile2, delimiter=',')
+    dPDL1writer.writerow(['tn', 'fp', 'fn', 'tp'])
+    # *************************************
+
+    # *MHJ Start
+    dataOUT = []
+    # *MHJ Stop
+
     for i in range(len(PDL1_test_list)):
         y_pred_test = PDL1_test_list[i]['PDL1_TPS(%)']
         dataALL[i]['PDL1_TPS(%)'] = y_pred_test
-        dataALL[i].to_csv('../03.Results/NSCLCmodel_'+modelNA+'_Dataset'+str(i+1)+'.csv', index=True)
+
+        # MHJ Start
+        dataAdd = dataSave[i][['PFS_Months', 'PFS_Event', 'Sex', 'OS_Months', 'OS_Event']]
+        dataOUT = pd.concat([dataALL[i], dataAdd], axis=1)
+        dataOUT.to_csv('03.Results/NSCLCmodel_'+modelNA+'_Dataset'+str(i+1)+'.csv', index=True)
+        #dataOUT.to_csv('03.Results/NSCLCmodel_'+modelNA+'_Dataset'+str(i+1)+'.csv', index=True)
+        # *MHJStop
+
         AUC_test, score_test = AUC_calculator(y_test_list[i], y_pred_test)
         print('   Dataset %d: %5.3f (n=%d) %8.3f' % (i+1, AUC_test, len(y_pred_test), score_test))
 
@@ -248,6 +335,9 @@ if __name__ == "__main__":
             AUC, score = AUC_calculator(y_test_list[i], y_pred_test)
         y_pred_01 = [int(c >= score) for c in y_pred_test]
         tn, fp, fn, tp = confusion_matrix(y_test_list[i], y_pred_01).ravel()
+        # ********************************
+        dPDL1writer.writerow([tn, fp, fn, tp])
+        # ********************************
         Sensitivity = tp / (tp + fn)
         Specificity = tn / (tn + fp)
         Accuracy = (tp + tn) / (tp + tn + fp + fn)
@@ -269,12 +359,28 @@ if __name__ == "__main__":
     modelNA = 'TMB' # TMB NLR Albumin Age
 
     print(modelNA+':')
-    fnOut = '../03.Results/NSCLC_' + modelNA + '_Scaler(' + 'None' + ')_prediction.xlsx'
+    fnOut = '03.Results/NSCLC_' + modelNA + '_Scaler(' + 'None' + ')_prediction.xlsx'
     dataALL[0].to_excel(fnOut, sheet_name='0')
+    #*************************************
+    csvfile3 = open('testTMB.csv', 'w', newline='')
+    dTMBwriter = csv.writer(csvfile3, delimiter=',')
+    dTMBwriter.writerow(['tn', 'fp', 'fn', 'tp'])
+    #*************************************
+    # *MHJ Start
+    dataOUT = []
+    # *MHJ Stop
+
     for i in range(len(TMB_test_list)):
         y_pred_test = TMB_test_list[i][modelNA]
         dataALL[i][modelNA] = y_pred_test
-        dataALL[i].to_csv('../03.Results/NSCLCmodel_'+modelNA+'_Dataset'+str(i+1)+'.csv', index=True)
+        #MHJ Start
+        #dataALL[i].to_csv('03.Results/NSCLCmodel_'+modelNA+'_Dataset'+str(i+1)+'.csv', index=True)
+        dataAdd = dataSave[i][['PFS_Months', 'PFS_Event', 'Sex', 'OS_Months', 'OS_Event']]
+        dataOUT = pd.concat([dataALL[i], dataAdd], axis=1)
+        dataOUT.to_csv('03.Results/NSCLCmodel_'+modelNA+'_Dataset'+str(i+1)+'.csv', index=True)
+
+        # *MHJStop
+
         AUC_test, score_test = AUC_calculator(y_test_list[i], y_pred_test)
         print('   Dataset %d: %5.3f (n=%d) %8.3f' % (i+1, AUC_test, len(y_pred_test), score_test))
 
@@ -289,6 +395,9 @@ if __name__ == "__main__":
             score = cutoff_value_TMB
         y_pred_01 = [int(c >= score) for c in y_pred_test]
         tn, fp, fn, tp = confusion_matrix(y_test_list[i], y_pred_01).ravel()
+        # ********************************
+        dTMBwriter.writerow([tn, fp, fn, tp])
+        # ********************************
         Sensitivity = tp / (tp + fn)
         Specificity = tn / (tn + fp)
         Accuracy = (tp + tn) / (tp + tn + fp + fn)
@@ -311,7 +420,7 @@ if __name__ == "__main__":
     textSize = 8
 
     ############# Plot ROC curves ##############
-    output_fig1 = '../03.Results/'+LLRmodelNA+'_PDL1_TMB_ROC_compare_NSCLC.pdf'
+    output_fig1 = '03.Results/'+LLRmodelNA+'_PDL1_TMB_ROC_compare_NSCLC.pdf'
     ax1 = [0] * 6
     fig1, ((ax1[0], ax1[1], ax1[2]), (ax1[3], ax1[4], ax1[5])) = plt.subplots(2, 3, figsize=(6.5, 3.5))
     fig1.subplots_adjust(left=0.08, bottom=0.15, right=0.97, top=0.96, wspace=0.3, hspace=0.5)
@@ -367,7 +476,7 @@ if __name__ == "__main__":
 
 
     ############# Plot PRC curves ##############
-    output_fig1 = '../03.Results/'+LLRmodelNA+'_PDL1_TMB_PRC_compare_NSCLC.pdf'
+    output_fig1 = '03.Results/'+LLRmodelNA+'_PDL1_TMB_PRC_compare_NSCLC.pdf'
     ax1 = [0] * 6
     fig1, ((ax1[0], ax1[1], ax1[2]), (ax1[3], ax1[4], ax1[5])) = plt.subplots(2, 3, figsize=(6.5, 3.5))
     fig1.subplots_adjust(left=0.08, bottom=0.15, right=0.97, top=0.96, wspace=0.3, hspace=0.5)
@@ -411,7 +520,7 @@ if __name__ == "__main__":
     print('TMB_odds_ratio', ' '.join([str(c) for c in OddsRatio_TMB]))
 
     ############# Plot metrics barplot ##############
-    output_fig_fn = '../03.Results/'+LLRmodelNA+'_MultipleMetricComparison_NSCLC.pdf'
+    output_fig_fn = '03.Results/'+LLRmodelNA+'_MultipleMetricComparison_NSCLC.pdf'
     plt.figure(figsize=(6.5, 4.5))
     ax1 = [0] * 6
     fig1, ((ax1[0], ax1[1]), (ax1[2], ax1[3]), (ax1[4], ax1[5])) = plt.subplots(3, 2, figsize=(4.1, 6))

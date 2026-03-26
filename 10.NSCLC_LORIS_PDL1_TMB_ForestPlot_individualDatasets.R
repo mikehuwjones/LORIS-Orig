@@ -1,15 +1,15 @@
-
-
-+###############################################################################################
-Aim: Predict survival of NSCLC patients using different models
-Description: calculate multi-variable hazard ratios for different cohorts using LORIS, PDL1 & TMB
-LORIS has been calculated using NSCLC-specific LLR6, pan-cancer LLR6, and NSCLC-specific LLR2 models respectively
-(Fig. 6d,e; Extended Data Fig. 6b,c,e,f)
-###############################################################################################
-
-
-# load required package
-```{r}
+#' 
+#' 
+#' +###############################################################################################
+#' Aim: Predict survival of NSCLC patients using different models
+#' Description: calculate multi-variable hazard ratios for different cohorts using LORIS, PDL1 & TMB
+#' LORIS has been calculated using NSCLC-specific LLR6, pan-cancer LLR6, and NSCLC-specific LLR2 models respectively
+#' (Fig. 6d,e; Extended Data Fig. 6b,c,e,f)
+#' ###############################################################################################
+#' 
+#' 
+#' # load required package
+## ----------------------------------------------------------------
 library(data.table)
 library(tidyverse)
 library(survminer)
@@ -20,14 +20,14 @@ library(readxl)
 library(verification)
 library(pROC)
 library(forestplot)
-```
 
-# Set parameters and directories
-```{r}
-input_dir = "../02.Input/"
-result_dir = "../03.Results/"
+#' 
+#' # Set parameters and directories
+## ----------------------------------------------------------------
+input_dir = "C:/Users/Mike Jones/PycharmProjects/LORIS_05/02.Input/"
+result_dir = "C:/Users/Mike Jones/PycharmProjects/LORIS_05/03.Results/"
 
-LLRmodelNA = 'LLR2' # LLR6   'LLR2'   'LLR6Pan'
+LLRmodelNA = 'LLR6' # LLR6   'LLR2'   'LLR6Pan'
 
 if (LLRmodelNA=='LLR6'){
   absoluteCutoff = 0.44
@@ -38,10 +38,10 @@ if (LLRmodelNA=='LLR6'){
 }
 
 
-```
 
-# load data 
-```{r}
+#' 
+#' # load data 
+## ----------------------------------------------------------------
 train_LLR6score_df = read_excel(paste0(result_dir,'NSCLC_',LLRmodelNA,'_Scaler(StandardScaler)_prediction.xlsx'), "0", col_names = TRUE)
 test1_LLR6score_df = read_excel(paste0(result_dir,'NSCLC_',LLRmodelNA,'_Scaler(StandardScaler)_prediction.xlsx'), "1", col_names = TRUE)
 test2_LLR6score_df = read_excel(paste0(result_dir,'NSCLC_',LLRmodelNA,'_Scaler(StandardScaler)_prediction.xlsx'), "2")
@@ -78,30 +78,32 @@ info_df = merge(x = info_df, y = all_LLR6score_df[c("SAMPLE_ID","y_pred", "DataS
 colnames(info_df) = c("SAMPLE_ID","TMB","PDL1","Systemic_therapy_history","Age","Drug","Sex","PFS_Event","PFS_Months","OS_Event","OS_Months", "LLRscore", "DataSet")
 
 DataSets = c('Chowell et al.', 'MSK1', 'Shim et al.', 'Vanguri et al.', 'Ravi et al.')
-```
 
-
-# Binarize LLR6, PD-L1 and TMB values
-```{r}
+#' 
+#' 
+#' # Binarize LLR6, PD-L1 and TMB values
+## ----------------------------------------------------------------
 info_df = info_df %>% group_by(DataSet) %>% mutate(
          LLRscore_01 = ifelse(LLRscore >= absoluteCutoff, "high", "low"),
          PDL1_01 = ifelse(PDL1 >= 50, "high", "low"),
          TMB_01 = ifelse(TMB >= 10, "high", "low"),
-         LLRscore_01_2 = ifelse(LLRscore >= quantile(LLRscore, 0.5), "high", "low"),
-         PDL1_01_2 = ifelse(PDL1 >= quantile(PDL1, 0.8), "high", "low"),
-         TMB_01_2 = ifelse(TMB >= quantile(TMB, 0.8), "high", "low"),
+         LLRscore_01_2 = ifelse(LLRscore >= quantile(LLRscore, 0.5,na.rm = TRUE), "high", "low"),
+         PDL1_01_2 = ifelse(PDL1 >= quantile(PDL1, 0.8,na.rm = TRUE), "high", "low"),
+         TMB_01_2 = ifelse(TMB >= quantile(TMB, 0.8,na.rm = TRUE), "high", "low"),
          )
 info_df$LLRscore_01 <- relevel(factor(info_df$LLRscore_01), ref = "low")
 info_df$PDL1_01 <- relevel(factor(info_df$PDL1_01), ref = "low")
 info_df$TMB_01 <- relevel(factor(info_df$TMB_01), ref = "low")
 info_df$LLRscore_01_2 <- relevel(factor(info_df$LLRscore_01_2), ref = "low")
+
+
 info_df$PDL1_01_2 <- relevel(factor(info_df$PDL1_01_2), ref = "low")
 info_df$TMB_01_2 <- relevel(factor(info_df$TMB_01_2), ref = "low")
 
-```
 
-# Univariate/Multivariable hazard ratio Forest plot (OS/PFS, continuous/binary)  HR_each_cancer
-```{r}
+#' 
+#' # Univariate/Multivariable hazard ratio Forest plot (OS/PFS, continuous/binary)  HR_each_cancer
+## ----------------------------------------------------------------
 survival_type = 'OS' # 'PFS'  'OS'
 HR_type = 'Multi' # Multi Uni
 Var_type = 'binaryAbsolute' # continuous  binaryAbsolute binaryPercent
@@ -226,5 +228,5 @@ plot_data %>%
 
 dev.off()
 
-```
 
+#' 

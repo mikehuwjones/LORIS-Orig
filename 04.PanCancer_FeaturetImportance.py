@@ -35,7 +35,8 @@ elif LRmodelNA == 'LR5noTMB':
 xy_colNAs = featuresNA + [phenoNA]
 
 print('Raw data processing ...')
-dataChowell_fn = '../02.Input/AllData.xlsx'
+dataChowell_fn = '02.Input/AllData.xlsx'
+#dataChowell_fn = 'C:/Users/Mike Jones/PycharmProjects/LORIS_05/02.Input/AllData.xlsx'
 dataChowell_Train = pd.read_excel(dataChowell_fn, sheet_name='Chowell_train', index_col=0)
 dataChowell_Train = dataChowell_Train[xy_colNAs]
 
@@ -92,7 +93,8 @@ feature_coefs_abs = feature_coefs_abs[sorted_idx]
 feature_NAs = np.array(feature_NAs)[sorted_idx]
 
 pos = np.arange(sorted_idx.shape[0]) + .5
-figOut = '../03.Results/PanCancer_FeaturetImportance_'+LRmodelNA+'.pdf'
+figOut = '03.Results/PanCancer_FeaturetImportance_'+LRmodelNA+'.pdf'
+#figOut = 'PanCancer_FeaturetImportance_'+LRmodelNA+'.pdf'
 featfig = plt.figure(figsize=(3, 3))
 featax = featfig.add_subplot(1, 1, 1)
 featfig.subplots_adjust(left=0.5, bottom=0.15, right=0.95, top=0.98, wspace=0.45, hspace=0.35)

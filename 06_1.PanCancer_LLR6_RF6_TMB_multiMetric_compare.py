@@ -6,8 +6,7 @@
 #             (Fig. 2a,c; Extended Data Fig. 7a).
 #Run command, e.g.: python 06_1.PanCancer_LLR6_RF6_TMB_multiMetric_compare.py all
 ###############################################################################################
-
-
+import csv
 import sys
 import time
 import pandas as pd
@@ -95,28 +94,74 @@ if __name__ == "__main__":
                       'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
                       'CancerType14', 'CancerType15', 'CancerType16']
     featuresNA_RF6 = ['TMB', 'Systemic_therapy_history', 'Albumin', 'NLR', 'Age', 'CancerType_grouped']
-    xy_colNAs = ['TMB', 'Systemic_therapy_history', 'Albumin', 'NLR', 'Age', 'CancerType1',
+    xy_colNAs = ['TMB', 'Systemic_therapy_history', 'Albumin', 'NLR', 'Age','CancerType1',
                  'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
                  'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
                  'CancerType14', 'CancerType15', 'CancerType16'] + ['CancerType_grouped'] + [phenoNA]
 
     print('Raw data processing ...')
-    dataALL_fn = '../02.Input/AllData.xlsx'
+    print('File processing order:dataChowell, dataMSK1, dataLee, dataVanguri, dataRavi')
+    dataALL_fn = '02.Input/AllData.xlsx'
+
+    #MHJ Start - replace the 6_1 input files with the 9_1 input files
+
+    #dataChowellTrain = pd.read_excel(dataALL_fn, sheet_name='Chowell_train', index_col=0)
+    #dataChowellTest = pd.read_excel(dataALL_fn, sheet_name='Chowell_test', index_col=0)
+    #dataMSK1 = pd.read_excel(dataALL_fn, sheet_name='MSK1', index_col=0)  # MSK1
+    #dataMSK12 = pd.read_excel(dataALL_fn, sheet_name='MSK2', index_col=0)  # MSK12 ?? MSK12 -> MSK2
+    #dataKato = pd.read_excel(dataALL_fn, sheet_name='Kato_panCancer', index_col=0)
+    #dataPradat = pd.read_excel(dataALL_fn, sheet_name='Pradat_panCancer', index_col=0)
+
+    #dataALL = [dataChowellTrain, dataChowellTest, dataMSK1, dataMSK12, dataKato, dataPradat]
+    #**MHJ Start
     dataChowellTrain = pd.read_excel(dataALL_fn, sheet_name='Chowell_train', index_col=0)
     dataChowellTest = pd.read_excel(dataALL_fn, sheet_name='Chowell_test', index_col=0)
-    dataMSK1 = pd.read_excel(dataALL_fn, sheet_name='MSK1', index_col=0)  # MSK1
-    dataMSK12 = pd.read_excel(dataALL_fn, sheet_name='MSK12', index_col=0)  # MSK12
-    dataKato = pd.read_excel(dataALL_fn, sheet_name='Kato_panCancer', index_col=0)
-    dataPradat = pd.read_excel(dataALL_fn, sheet_name='Pradat_panCancer', index_col=0)
+    dataChowell = pd.concat([dataChowellTrain, dataChowellTest], axis=0)
 
-    dataALL = [dataChowellTrain, dataChowellTest, dataMSK1, dataMSK12, dataKato, dataPradat]
+    dataMSK1 = pd.read_excel(dataALL_fn, sheet_name='MSK1', index_col=0)
+    dataLee = pd.read_excel(dataALL_fn, sheet_name='Shim_NSCLC', index_col=0)
+
+    dataVanguri = pd.read_excel(dataALL_fn, sheet_name='Vanguri_NSCLC', index_col=0)
+    dataRavi = pd.read_excel(dataALL_fn, sheet_name='Ravi_NSCLC', index_col=0)
+
+    dataALL = [dataChowell, dataMSK1, dataLee, dataVanguri, dataRavi]
+    #**MHJ STOP
+
+    #**MHJ Start
+
+    #preserve the extra columns in a list of dataframes
+    #v0.1 dataSave = []
+
+
+    #for i in dataALL:
+    #   dataSave.append(pd.DataFrame(i, columns=['PFS_Months','PFS_Event','OS_Months','OS_Event','Sex','PDL1_TPS(%)']))
+    #*MHJStop
+
 
     if cancer_type == 'nonNSCLC':
         dataALL = [c.loc[c['CancerType11']==0,:] for c in dataALL]
+    # * MHJ Start
+    elif cancer_type == 'NSCLC':
+        dataALL = [c.loc[c['CancerType11'] != 0, :] for c in dataALL]
+    # * MHJ Stop
+
+    #V0.1
+    dataSave = [df.copy() for df in dataALL]
+    #V0.1 Stop
 
     for i in range(len(dataALL)):
         dataALL[i] = dataALL[i][xy_colNAs].astype(float)
         dataALL[i] = dataALL[i].dropna(axis=0)
+
+    #V0.1 drop the NAs from the saved data but keep all the columns intact
+
+    for j in range(len(dataSave)):
+        temp = dataSave[j][xy_colNAs]
+        mask1 = temp.isna()
+        mask2 = np.sum(mask1, axis=1)
+        mask3 = mask2 > 0
+        dataSave[j] = dataSave[j][~mask3]
+    #V0.1 Stop
 
     # truncate TMB
     TMB_upper = 50
@@ -181,7 +226,7 @@ if __name__ == "__main__":
     OddsRatio_TMB = []
 
     ###################### Read in LLRx model params ######################
-    fnIn = '../03.Results/6features/PanCancer/PanCancer_'+model_type+LLRmodelNA+'_10k_ParamCalculate.txt'
+    fnIn = '03.Results/6features/PanCancer/PanCancer_'+model_type+LLRmodelNA+'_10k_ParamCalculate.txt'
     params_data = open(fnIn, 'r').readlines()
     params_dict = {}
     for line in params_data:
@@ -210,13 +255,33 @@ if __name__ == "__main__":
     clf.intercept_ = np.array(params_dict['LLR_intercept'])
 
     print('LLRx_meanParams10000:')
-    fnOut = '../03.Results/PanCancer_'+ cancer_type + '_' + LLRmodelNA + '_Scaler(' + 'StandardScaler' + ')_prediction.xlsx'
+    fnOut = '03.Results/PanCancer_'+ cancer_type + '_' + LLRmodelNA + '_Scaler(' + 'StandardScaler' + ')_prediction.xlsx'
     dataALL[0].to_excel(fnOut, sheet_name='0')
+    # *************************************
+    csvfile1 = open('testLLRx.csv', 'w', newline='')
+    dLLRxwriter = csv.writer(csvfile1, delimiter=',')
+    dLLRxwriter.writerow(['tn', 'fp', 'fn', 'tp'])
+    #*****************************************
+    #*MHJ Start
+    dataOUT = []
+    #*MHJ Stop
     for i in range(len(x_test_scaled_list)):
         y_pred_test = clf.predict_proba(x_test_scaled_list[i])[:, 1]
         y_LLR6pred_test_list.append(y_pred_test)
         dataALL[i][LLRmodelNA] = y_pred_test
-        dataALL[i].to_csv('../03.Results/PanCancermodel_'+LLRmodelNA+'_Dataset'+str(i+1)+'.csv', index=True)
+        #*MHJ Start Add in the saved columns
+        # dataALL[i].to_csv('03.Results/PanCancermodel_'+LLRmodelNA+'_Dataset'+str(i+1)+'.csv', index=True)
+        #dataOUT = pd.concat([dataALL[i],dataSave[i]],axis=1)
+        # MHJ Start
+        # dataALL[i].to_csv('03.Results/NSCLCmodel_'+LLRmodelNA+'_Dataset'+str(i+1)+'.csv', index=True)
+        #MHJ V0.1
+        dataAdd = dataSave[i][['PFS_Months', 'PFS_Event', 'Sex', 'OS_Months', 'OS_Event']]
+        dataOUT = pd.concat([dataALL[i], dataAdd], axis=1)
+        #MHJ V0.1
+        dataOUT.to_csv('03.Results/PanCancermodel_' + LLRmodelNA + '_Dataset' + str(i + 1) + '.csv', index=True)
+        # MHJ Stop
+        #dataOUT.to_csv('03.Results/PanCancermodel_' + LLRmodelNA + '_Dataset' + str(i + 1) + '.csv', index=True)
+        # *MHJStop
         AUC_test, score_test = AUC_calculator(y_test_list[i], y_pred_test)
         print('   Dataset %d: %5.3f (n=%d) %8.3f' % (i+1, AUC_test, len(y_pred_test), score_test))
 
@@ -232,6 +297,9 @@ if __name__ == "__main__":
         y_pred_01 = [int(c >= score) for c in y_pred_test]
         AUPRC = average_precision_score(y_test_list[i], y_pred_test)
         tn, fp, fn, tp = confusion_matrix(y_test_list[i], y_pred_01).ravel()
+        # ********************************
+        dLLRxwriter.writerow([tn, fp, fn, tp])
+        # ********************************
         Sensitivity = tp / (tp + fn)
         Specificity = tn / (tn + fp)
         Accuracy = (tp + tn) / (tp + tn + fp + fn)
@@ -256,13 +324,23 @@ if __name__ == "__main__":
     clf = RandomForestClassifier(random_state=randomSeed, n_jobs=CPU_num, **params).fit(x_test_RF6_list[0], y_test_list[0])
 
     print('RF6:')
-    fnOut = '../03.Results/PanCancer_' + cancer_type + '_' + modelNA + '_Scaler(' + 'None' + ')_prediction.xlsx'
+    fnOut = '03.Results/PanCancer_' + cancer_type + '_' + modelNA + '_Scaler(' + 'None' + ')_prediction.xlsx'
     dataALL[0].to_excel(fnOut, sheet_name='0')
+
+    #MHJ Start
+    dataOUT = []
+    #MHJ Stop
     for i in range(len(x_test_RF6_list)):
         y_pred_test = clf.predict_proba(x_test_RF6_list[i])[:, 1]
         y_RF6pred_test_list.append(y_pred_test)
         dataALL[i][modelNA] = y_pred_test
-        dataALL[i].to_csv('../03.Results/PanCancermodel_'+modelNA+'_Dataset'+str(i+1)+'.csv', index=True)
+        # MHJ V0.1
+        dataAdd = dataSave[i][['PFS_Months', 'PFS_Event', 'Sex', 'OS_Months', 'OS_Event']]
+        dataOUT = pd.concat([dataALL[i], dataAdd], axis=1)
+        # MHJ V0.1
+        dataOUT.to_csv('03.Results/PanCancermodel_'+modelNA+'_Dataset'+str(i+1)+'.csv', index=True)
+        # *MHJStop
+
         AUC_test, score_test = AUC_calculator(y_test_list[i], y_pred_test)
         print('   Dataset %d: %5.3f (n=%d) %8.3f' % (i+1, AUC_test, len(y_pred_test), score_test))
 
@@ -300,13 +378,23 @@ if __name__ == "__main__":
     modelNA = 'TMB'
 
     print(modelNA+':')
-    fnOut = '../03.Results/PanCancer_' + cancer_type + '_' + modelNA + '_Scaler(' + 'None' + ')_prediction.xlsx'
+    fnOut = '03.Results/PanCancer_' + cancer_type + '_' + modelNA + '_Scaler(' + 'None' + ')_prediction.xlsx'
     dataALL[0].to_excel(fnOut, sheet_name='0')
+    #MHJ Start
+    dataOUT = []
+    #MHJ Stop
+
     for i in range(len(x_test_RF6_list)):
         y_pred_test = x_test_RF6_list[i][modelNA]
         y_TMBpred_test_list.append(y_pred_test)
         dataALL[i][modelNA] = y_pred_test
-        dataALL[i].to_csv('../03.Results/PanCancermodel_'+modelNA+'_Dataset'+str(i+1)+'.csv', index=True)
+
+        # MHJ V0.1
+        dataAdd = dataSave[i][['PFS_Months', 'PFS_Event', 'Sex', 'OS_Months', 'OS_Event']]
+        dataOUT = pd.concat([dataALL[i], dataAdd], axis=1)
+        # MHJ V0.1 End
+        dataOUT.to_csv('03.Results/PanCancermodel_' + modelNA + '_Dataset' + str(i + 1) + '.csv', index=True)
+
         AUC_test, score_test = AUC_calculator(y_test_list[i], y_pred_test)
         print('   Dataset %d: %5.3f (n=%d) %8.3f' % (i+1, AUC_test, len(y_pred_test), score_test))
 
@@ -343,12 +431,15 @@ if __name__ == "__main__":
 
     ############################## Plot ROC curves ##############################
     textSize = 8
-    output_fig1 = '../03.Results/PanCancer_'+LLRmodelNA+'_RF6_TMB_ROC_'+cancer_type+'.pdf'
+    output_fig1 = '03.Results/PanCancer_'+LLRmodelNA+'_RF6_TMB_ROC_'+cancer_type+'.pdf'
     ax1 = [0] * 6
     fig1, ((ax1[0], ax1[1], ax1[2]), (ax1[3], ax1[4], ax1[5])) = plt.subplots(2, 3, figsize=(6.5, 3.5))
     fig1.subplots_adjust(left=0.08, bottom=0.15, right=0.97, top=0.96, wspace=0.3, hspace=0.5)
 
-    for i in range(6):
+    #**MHJ Start replace 6_1 files with 9_1 files
+    # for i in range(6):
+    for i in range(5):
+    #**MHJ Stop
         y_true = y_test_list[i]
         ###### LLRx model
         y_pred = y_pred_LLRx[i]
@@ -426,7 +517,7 @@ if __name__ == "__main__":
     print('TMB_Sensitivity', ' '.join([str(c) for c in Sensitivity_TMB]))
 
 
-    output_fig_fn = '../03.Results/PanCancer_'+LLRmodelNA+'_RF6_TMB_MultiMetric_'+cancer_type+'.pdf'
+    output_fig_fn = '03.Results/PanCancer_'+LLRmodelNA+'_RF6_TMB_MultiMetric_'+cancer_type+'.pdf'
     ax1 = [0] * 8
     fig1, ((ax1[0], ax1[1]), (ax1[2], ax1[3]), (ax1[4], ax1[5]), (ax1[6], ax1[7])) = plt.subplots(4, 2, figsize=(6.5, 6.5))
     fig1.subplots_adjust(left=0.08, bottom=0.15, right=0.97, top=0.96, wspace=0.3, hspace=0.55)
@@ -437,15 +528,16 @@ if __name__ == "__main__":
     LLRx_data = [AUPRC_LLRx, OddsRatio_LLRx, Accuracy_LLRx, F1_LLRx, PPV_LLRx, NPV_LLRx, Specificity_LLRx, Sensitivity_LLRx]
     RF6_data = [AUPRC_RF6, OddsRatio_RF6, Accuracy_RF6, F1_RF6, PPV_RF6, NPV_RF6, Specificity_RF6, Sensitivity_RF6]
     TMB_data = [AUPRC_TMB, OddsRatio_TMB, Accuracy_TMB, F1_TMB, PPV_TMB, NPV_TMB, Specificity_TMB, Sensitivity_TMB]
+    #* MHJ replace the 6_1 files: reduced the np.array size from [0, 1, 2, 3, 4,5 ] to [0, 1, 2, 3, 4]
     for i in range(8):
-        bh11 = ax1[i].bar(np.array([0, 1, 2, 3, 4, 5]) + barWidth * 1, LLRx_data[i],
+        bh11 = ax1[i].bar(np.array([0, 1, 2, 3, 4]) + barWidth * 1, LLRx_data[i],
                        color=color_list[0], width=barWidth, edgecolor='k', label=modelNA_list[0])
-        bh12 = ax1[i].bar(np.array([0, 1, 2, 3, 4, 5]) + barWidth * 2, RF6_data[i],
+        bh12 = ax1[i].bar(np.array([0, 1, 2, 3, 4]) + barWidth * 2, RF6_data[i],
                        color=color_list[1], width=barWidth, edgecolor='k', label=modelNA_list[1])
-        bh13 = ax1[i].bar(np.array([0, 1, 2, 3, 4, 5]) + barWidth * 3, TMB_data[i],
+        bh13 = ax1[i].bar(np.array([0, 1, 2, 3, 4]) + barWidth * 3, TMB_data[i],
                        color=color_list[2], width=barWidth, edgecolor='k', label=modelNA_list[2])
 
-        ax1[i].set_xticks(np.array([0, 1, 2, 3, 4, 5]) + barWidth * 2)
+        ax1[i].set_xticks(np.array([0, 1, 2, 3, 4]) + barWidth * 2)
         ax1[i].set_xticklabels([])
         if i in [0,2]:
             ax1[i].legend(frameon=False, loc=(0.05, 0.8), prop={'size': textSize}, handlelength=1, ncol=3,

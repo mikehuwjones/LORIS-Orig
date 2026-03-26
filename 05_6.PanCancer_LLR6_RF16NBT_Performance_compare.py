@@ -52,7 +52,7 @@ if __name__ == "__main__":
     resampleNUM = 10000
 
     try:
-        randomSeed = int(sys.argv[1])
+        randomSeed = int(sys.argv[1])  ## MHJ SHOULD BE argv[2] ??
     except:
         randomSeed = 1
     CPU_num = -1
@@ -74,10 +74,10 @@ if __name__ == "__main__":
         temp_df = pd.DataFrame()
         temp_df['method'] = [MLM] * resampleNUM
         if MLM == 'RF16_NBT':
-            fnIn = '../03.Results/16features/PanCancer/ModelEvalResult_' + MLM + '_Scaler(' + SCALE + ')_CV' + \
+            fnIn = '03.Results/16features/PanCancer/ModelEvalResult_' + MLM + '_Scaler(' + SCALE + ')_CV' + \
                    str(Kfold) + 'Rep' + str(N_repeat_KFold) + '_random' + str(randomSeed) + '.txt'
         else:
-            fnIn = '../03.Results/6features/PanCancer/ModelEvalResult_' + MLM + '_Scaler(' + SCALE + ')_CV' + \
+            fnIn = '03.Results/6features/PanCancer/ModelEvalResult_' + MLM + '_Scaler(' + SCALE + ')_CV' + \
                 str(Kfold) + 'Rep' + str(N_repeat_KFold) + '_random' + str(randomSeed) + '.txt'
         dataIn = open(fnIn, 'r').readlines()
         header = dataIn[0].strip().split('\t')
@@ -251,5 +251,5 @@ if __name__ == "__main__":
     ax.spines['right'].set_visible(False)
     ax.spines['top'].set_visible(False)
 
-    fnOut = '../03.Results/PanCancer_LLR6_RF16NBT_Performance_compare_'+plot_train_test_delta+'.pdf'
+    fnOut = '03.Results/PanCancer_LLR6_RF16NBT_Performance_compare_'+plot_train_test_delta+'.pdf'
     plt.savefig(fnOut)

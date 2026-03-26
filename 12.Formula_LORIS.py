@@ -22,9 +22,9 @@ if __name__ == "__main__":
 
     ###################### Read in LLRx model params ######################
     if model == 'LLR6_pan':
-        fnIn = '../03.Results/6features/PanCancer/PanCancer_LLR6_10k_ParamCalculate.txt'
+        fnIn = '03.Results/6features/PanCancer/PanCancer_all_LLR6_10k_ParamCalculate.txt'
     elif model == 'LLR6_NSCLC':
-        fnIn = '../03.Results/6features/NSCLC/NSCLC_LLR6_10k_ParamCalculate.txt'
+        fnIn = '03.Results/16features/NSCLC/NSCLC_LLR6_10k_ParamCalculate.txt'
     params_data = open(fnIn, 'r').readlines()
     params_dict = {}
     for line in params_data:

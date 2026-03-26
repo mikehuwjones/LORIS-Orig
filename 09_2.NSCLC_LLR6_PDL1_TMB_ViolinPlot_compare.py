@@ -22,12 +22,12 @@ if __name__ == "__main__":
     plot_data_LLR6 = []
     LLRmodelNA = 'LLR6'
     print('Raw data read in ...')
-    fnIn = '../03.Results/' + 'NSCLC_'+LLRmodelNA+'_Scaler(StandardScaler)_prediction.xlsx'
+    fnIn = '03.Results/' + 'NSCLC_'+LLRmodelNA+'_Scaler(StandardScaler)_prediction.xlsx'
     start_set = 0
     if start_set:
-        output_fig_fn = '../03.Results/NSCLC_'+LLRmodelNA+'_TMB_N_NR_score_violin_testOnly.pdf'
+        output_fig_fn = '03.Results/NSCLC_'+LLRmodelNA+'_TMB_N_NR_score_violin_testOnly.pdf'
     else:
-        output_fig_fn = '../03.Results/NSCLC_'+LLRmodelNA+'_TMB_N_NR_score_violin_all.pdf'
+        output_fig_fn = '03.Results/NSCLC_'+LLRmodelNA+'_TMB_N_NR_score_violin_all.pdf'
     for sheet_i in range(start_set,5):
         data = pd.read_excel(fnIn, sheet_name=str(sheet_i), header=0, index_col=0)
         y_pred_LLR6=np.array(data['y_pred'].tolist())
@@ -49,7 +49,7 @@ if __name__ == "__main__":
 
     plot_PDL1_df = pd.DataFrame()
     plot_data_PDL1 = []
-    fnIn = '../03.Results/NSCLC_PDL1_Scaler(None)_prediction.xlsx'
+    fnIn = '03.Results/NSCLC_PDL1_Scaler(None)_prediction.xlsx'
     for sheet_i in range(start_set,5):
         data = pd.read_excel(fnIn, sheet_name=str(sheet_i), header=0, index_col=0)
         y_pred_PDL1 = np.array(data['y_pred'].tolist())
@@ -66,7 +66,7 @@ if __name__ == "__main__":
 
     plot_TMB_df = pd.DataFrame()
     plot_data_TMB = []
-    fnIn = '../03.Results/NSCLC_TMB_Scaler(None)_prediction.xlsx'
+    fnIn = '03.Results/NSCLC_TMB_Scaler(None)_prediction.xlsx'
     for sheet_i in range(start_set,5):
         data = pd.read_excel(fnIn, sheet_name=str(sheet_i), header=0, index_col=0)
         y_pred_TMB = np.array(data['y_pred'].tolist())

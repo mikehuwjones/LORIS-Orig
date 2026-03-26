@@ -77,11 +77,11 @@ if __name__ == "__main__":
                  'CancerType14', 'CancerType15', 'CancerType16'] + [phenoNA]
 
     print('Raw data processing ...')
-    dataALL_fn = '../02.Input/AllData.xlsx'
+    dataALL_fn = '02.Input/AllData.xlsx'
     dataChowellTrain = pd.read_excel(dataALL_fn, sheet_name='Chowell_train', index_col=0)
     dataChowellTest = pd.read_excel(dataALL_fn, sheet_name='Chowell_test', index_col=0)
     dataMSK1 = pd.read_excel(dataALL_fn, sheet_name='MSK1', index_col=0)
-    dataMSK12 = pd.read_excel(dataALL_fn, sheet_name='MSK12', index_col=0)
+    dataMSK12 = pd.read_excel(dataALL_fn, sheet_name='MSK2', index_col=0)
     dataKato = pd.read_excel(dataALL_fn, sheet_name='Kato_panCancer', index_col=0)
     dataPradat = pd.read_excel(dataALL_fn, sheet_name='Pradat_panCancer', index_col=0)
 
@@ -128,7 +128,7 @@ if __name__ == "__main__":
     y_LLR5pred_test_list = []
 
     ###################### test LLR6 model performance ######################
-    fnIn = '../03.Results/6features/PanCancer/PanCancer_all_LLR6_10k_ParamCalculate.txt'
+    fnIn = '03.Results/6features/PanCancer/PanCancer_all_LLR6_10k_ParamCalculate.txt'
     params_data = open(fnIn, 'r').readlines()
     params_dict = {}
     for line in params_data:
@@ -154,7 +154,7 @@ if __name__ == "__main__":
 
 
     ###################### test LLR6_nonNSCLC model performance ######################
-    fnIn = '../03.Results/6features/PanCancer/PanCancer_nonNSCLC_LLR6_10k_ParamCalculate.txt'
+    fnIn = '03.Results/6features/PanCancer/PanCancer_nonNSCLC_LLR6_10k_ParamCalculate.txt'
     params_data = open(fnIn, 'r').readlines()
     params_dict = {}
     for line in params_data:
@@ -187,7 +187,7 @@ if __name__ == "__main__":
 
     ############################## Plot ROC curves ##############################
     textSize = 8
-    output_fig1 = '../03.Results/PanCancer_vs_nonNSCLC_LLR6_ROC_AUC.pdf'
+    output_fig1 = '03.Results/PanCancer_vs_nonNSCLC_LLR6_ROC_AUC.pdf'
     ax1 = [0] * 6
     fig1, ((ax1[0], ax1[1], ax1[2]), (ax1[3], ax1[4], ax1[5])) = plt.subplots(2, 3, figsize=(6.5, 3.5))
     fig1.subplots_adjust(left=0.08, bottom=0.15, right=0.97, top=0.96, wspace=0.3, hspace=0.5)

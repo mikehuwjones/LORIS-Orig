@@ -27,12 +27,12 @@ if __name__ == "__main__":
     LLRmodelNA = 'LLR6'
     cancer_type = sys.argv[1] # 'all'    'nonNSCLC'
     print('Raw data read in ...')
-    fnIn = '../03.Results/PanCancer_' + cancer_type + '_' + LLRmodelNA + '_Scaler(StandardScaler)_prediction.xlsx'
+    fnIn = '03.Results/PanCancer_' + cancer_type + '_' + LLRmodelNA + '_Scaler(StandardScaler)_prediction.xlsx'
     start_set = 0
     if start_set:
-        output_fig_fn = '../03.Results/PanCancer_'+LLRmodelNA+'_RF6_TMB_N_NR_score_violin_testOnly.pdf'
+        output_fig_fn = '03.Results/PanCancer_'+LLRmodelNA+'_RF6_TMB_N_NR_score_violin_testOnly.pdf'
     else:
-        output_fig_fn = '../03.Results/PanCancer_'+LLRmodelNA+'_RF6_TMB_N_NR_score_violin_all.pdf'
+        output_fig_fn = '03.Results/PanCancer_'+LLRmodelNA+'_RF6_TMB_N_NR_score_violin_all.pdf'
     for sheet_i in range(start_set,6):
         data = pd.read_excel(fnIn, sheet_name=str(sheet_i), header=0, index_col=0)
         y_pred_LLR6=np.array(data['y_pred'].tolist())
@@ -54,7 +54,7 @@ if __name__ == "__main__":
 
     plot_RF6_df = pd.DataFrame()
     plot_data_RF6 = []
-    fnIn = '../03.Results/PanCancer_' + cancer_type + '_' + 'RF6_Scaler(None)_prediction.xlsx'
+    fnIn = '03.Results/PanCancer_' + cancer_type + '_' + 'RF6_Scaler(None)_prediction.xlsx'
     for sheet_i in range(start_set,6):
         data = pd.read_excel(fnIn, sheet_name=str(sheet_i), header=0, index_col=0)
         y_pred_RF6 = np.array(data['y_pred'].tolist())
@@ -71,7 +71,7 @@ if __name__ == "__main__":
 
     plot_TMB_df = pd.DataFrame()
     plot_data_TMB = []
-    fnIn = '../03.Results/PanCancer_' +  cancer_type + '_TMB_Scaler(None)_prediction.xlsx'
+    fnIn = '03.Results/PanCancer_' +  cancer_type + '_TMB_Scaler(None)_prediction.xlsx'
     for sheet_i in range(start_set,6):
         data = pd.read_excel(fnIn, sheet_name=str(sheet_i), header=0, index_col=0)
         y_pred_TMB = np.array(data['y_pred'].tolist())

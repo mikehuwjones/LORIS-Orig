@@ -1,16 +1,16 @@
-###############################################################################################
-Aim: Pan-cancer survival analysis in ICB test cohort
-Description: To study LORIS predictive power in merged Chowell et al. & MSK1 cohorts (Figs. 3, 4c,d; Extended Data Figs. 3, 4a-d, 7c-d, 8c,d)
-(1) K-M survival curves for LORIS-high/TMB-high vs. LORIS-high/TMB-low vs. LORIS-low/TMB-high vs. LORIS-low/TMB-low groups
-(2) Multi-variable hazard ratio forest plot in individual cancers
-(3) 0.5-,1-,2-,3-,4-,5-year PFS/OS in individual cancers
-(4) K-M survival curves for 0-10%,10-20%,20-50%,50-80%,80-90%,90-100%-quantile groups of LORIS
-These analyses have been done in both pan-cancer patients and non-NSCLC patients.
-###############################################################################################
-
-
-# load required package
-```{r}
+#' ###############################################################################################
+#' Aim: Pan-cancer survival analysis in ICB test cohort
+#' Description: To study LORIS predictive power in merged Chowell et al. & MSK1 cohorts (Figs. 3, 4c,d; Extended Data Figs. 3, 4a-d, 7c-d, 8c,d)
+#' (1) K-M survival curves for LORIS-high/TMB-high vs. LORIS-high/TMB-low vs. LORIS-low/TMB-high vs. LORIS-low/TMB-low groups
+#' (2) Multi-variable hazard ratio forest plot in individual cancers
+#' (3) 0.5-,1-,2-,3-,4-,5-year PFS/OS in individual cancers
+#' (4) K-M survival curves for 0-10%,10-20%,20-50%,50-80%,80-90%,90-100%-quantile groups of LORIS
+#' These analyses have been done in both pan-cancer patients and non-NSCLC patients.
+#' ###############################################################################################
+#' 
+#' 
+#' # load required package
+## ---------------------------------------------------------------------------
 library(data.table)
 library(tidyverse)
 library(survminer)
@@ -22,22 +22,24 @@ library(verification)
 library(pROC)
 library(forestplot)
 library(viridis)
-```
 
-# Set parameters and directories
-```{r}
-input_dir = "02.Input/"
-result_dir = "03.Results/"
+#' 
+#' # Set parameters and directories
+## ---------------------------------------------------------------------------
+#input_dir = "02.Input/"
+##result_dir = "03.Results/"
+result_dir = "C:/Users/Mike Jones/PycharmProjects/LORIS_05/03.Results/"
+input_dir = "C:/Users/Mike Jones/PycharmProjects/LORIS_05/02.Input/"
 
 LLRmodelNA = 'LLR6'
 absoluteCutoff = 0.5
 
-```
 
-# load data 
-```{r}
+#' 
+#' # load data 
+## ---------------------------------------------------------------------------
 
-cancer_type = 'nonNSCLC' # 'all'   'nonNSCLC'
+cancer_type = 'all' # 'all'   'nonNSCLC'
 
 test1_LLRscore_df = read_excel(paste0(result_dir,'PanCancer_',cancer_type,'_', LLRmodelNA,'_Scaler(StandardScaler)_prediction.xlsx'), "1", col_names = TRUE)
 test2_LLRscore_df = read_excel(paste0(result_dir,'PanCancer_',cancer_type,'_', LLRmodelNA,'_Scaler(StandardScaler)_prediction.xlsx'), "2")
@@ -64,11 +66,11 @@ colnames(info_df) = c(renamed_cols, c("LLRscore","RF6score"))
 
 CancerTypes = unique(info_df$CancerType)
 
-```
 
-
-# Pan-cancer K-M PFS curves of LLRscorehigh-TMBhigh VS LLRscorehigh-TMBlow VS...
-```{r}
+#' 
+#' 
+#' # Pan-cancer K-M PFS curves of LLRscorehigh-TMBhigh VS LLRscorehigh-TMBlow VS...
+## ---------------------------------------------------------------------------
 cutoffType = 'AbsoluteCutoff' # 'AbsoluteCutoff'  'PercentileCutoff80'  'PercentileCutoff50'
 if (cutoffType == 'PercentileCutoff80'){
   TMB_Percentile = 0.8 
@@ -133,8 +135,8 @@ ggsurvplot(survfit(Surv(PFS_Months, PFS_Event) ~ LLR6_TMB_group, data = plot_df)
                         plot.caption = element_text(size = plot_font_size)
                          ),  # top, right, bot, left
         risk.table.fontsize = risktable_font_size,
-        pval.method = T) +
-guides(color=guide_legend(ncol =1)) +
+        pval.method = T) 
+guides(color=guide_legend(ncol =1)) 
 labs(color = "")
 dev.off()
 
@@ -170,11 +172,11 @@ Z_value=scox_coef[4]
 P_value=scox_coef[5]
 print(paste(c(format(P_value, scientific = TRUE),HR_value), collapse= " "))
 
-```
 
-
-# Pan-cancer K-M OS curves of LLRscorehigh-TMBhigh VS LLRscorehigh-TMBlow VS...
-```{r}
+#' 
+#' 
+#' # Pan-cancer K-M OS curves of LLRscorehigh-TMBhigh VS LLRscorehigh-TMBlow VS...
+## ---------------------------------------------------------------------------
 
 cutoffType = 'PercentileCutoff80' # 'AbsoluteCutoff'  'PercentileCutoff80'  'PercentileCutoff50'
 if (cutoffType == 'PercentileCutoff80'){
@@ -207,6 +209,7 @@ plot_df <- info_df %>%
 pdf(paste0(result_dir,"PanCancer_",cancer_type,'_',LLRmodelNA,"_TMB_OScurve_",cutoffType,".pdf"), width = 5*0.8, height = 3.8, onefile = F) 
 plot_font_size = 9
 risktable_font_size = 3
+
 ggsurvplot(survfit(Surv(OS_Months, OS_Event) ~ LLR6_TMB_group, data = plot_df), pval = F, 
           palette = plasma(4),
           risk.table=TRUE,
@@ -241,8 +244,8 @@ ggsurvplot(survfit(Surv(OS_Months, OS_Event) ~ LLR6_TMB_group, data = plot_df), 
                         plot.caption = element_text(size = plot_font_size)
                          ),  # top, right, bot, left
         risk.table.fontsize = risktable_font_size,
-        pval.method = T) +
-guides(color=guide_legend(ncol =1)) +
+        pval.method = T) 
+guides(color=guide_legend(ncol =1)) 
 labs(color = "")
 dev.off()
 
@@ -278,11 +281,11 @@ Z_value=scox_coef[4]
 P_value=scox_coef[5]
 print(paste(c(P_value,HR_value), collapse= " "))
 
-```
 
-
-# Binarize LLR6 and TMB values
-```{r}
+#' 
+#' 
+#' # Binarize LLR6 and TMB values
+## ---------------------------------------------------------------------------
 info_df = info_df %>% group_by(CancerType) %>% mutate(
          LLRscore_01 = ifelse(LLRscore >= absoluteCutoff, "high", "low"),
          RF6score_01 = ifelse(RF6score >= 0.27, "high", "low"),
@@ -298,10 +301,10 @@ info_df$LLRscore_01_2 <- relevel(factor(info_df$LLRscore_01_2), ref = "low")
 info_df$RF6score_01_2 <- relevel(factor(info_df$RF6score_01_2), ref = "low")
 info_df$TMB_01_2 <- relevel(factor(info_df$TMB_01_2), ref = "low")
 
-```
 
-# Univariate/Multivariable hazard ratio Forest plot (OS/PFS, continuous/binary)  HR_each_cancer
-```{r}
+#' 
+#' # Univariate/Multivariable hazard ratio Forest plot (OS/PFS, continuous/binary)  HR_each_cancer
+## ---------------------------------------------------------------------------
 survival_type = 'PFS' # 'PFS'  'OS'
 HR_type = 'Multi' # Multi Uni
 Var_type = 'binaryPercent' # continuous  binaryAbsolute binaryPercent
@@ -437,10 +440,10 @@ plot_data %>%
 
 dev.off()
 
-```
 
-# X-year PFS comparison for score-low VS score-high patients (X = 0.5,1,2,3,4,5 years)
-```{r}
+#' 
+#' # X-year PFS comparison for score-low VS score-high patients (X = 0.5,1,2,3,4,5 years)
+## ---------------------------------------------------------------------------
 testVAR = 'TMB_01_2' # RF6score_01 LLRscore_01 TMB_01 RF6score_01_2 LLRscore_01_2 TMB_01_2
 
 if (grepl('_01_2', testVAR)){
@@ -570,10 +573,10 @@ print(paste("Delta 60-month PFS rate:",median(PFSrate_score_60month$PFSR_H, na.r
 stat_result = wilcox.test(PFSrate_score_60month$PFSR_H, PFSrate_score_60month$PFSR_L, paired = TRUE, alternative = "two.sided", na.rm = TRUE)
 print(paste0('60-month Wilcoxon p-value: ',stat_result$p.value))
 
-```
 
-# X-year OS comparison for score-low VS score-high patients (X = 0.5,1,2,3,4,5 years)
-```{r}
+#' 
+#' # X-year OS comparison for score-low VS score-high patients (X = 0.5,1,2,3,4,5 years)
+## ---------------------------------------------------------------------------
 testVAR = 'TMB_01_2' # RF6score_01 LLRscore_01 TMB_01 RF6score_01_2 LLRscore_01_2 TMB_01_2
 
 if (grepl('_01_2', testVAR)){
@@ -690,10 +693,10 @@ print(paste("Delta 60-month OS rate:",median(OSrate_score_60month$OSR_H, na.rm =
 stat_result = wilcox.test(OSrate_score_60month$OSR_H, OSrate_score_60month$OSR_L, paired = TRUE, alternative = "two.sided", na.rm = TRUE)
 print(paste0('60-month Wilcoxon p-value: ',stat_result$p.value))
 
-```
 
-# 6 groups of K-M PFS curves of LORIS / TMB (0-10%,10-20%,20-50%,50-80%,80-90%,90-100%-quantile)
-```{r}
+#' 
+#' # 6 groups of K-M PFS curves of LORIS / TMB (0-10%,10-20%,20-50%,50-80%,80-90%,90-100%-quantile)
+## ---------------------------------------------------------------------------
 ####### load data
 dataType = 'PanCancer_all'  # PanCancer_nonNSCLC   PanCancer_all
 LLRmodelNA = 'LLR6' #  'LLR6'   'TMB'
@@ -782,10 +785,10 @@ HR_CI = exp(confint(scox))
 Z_value=scox_coef[4]
 P_value= pnorm(Z_value, lower.tail = FALSE) # to test if higher score has better survival
 print(paste0('HR_value: ', round(HR_value,2), '.  P_value: ', P_value))
-```
 
-# 6 groups of K-M OS curves of LORIS / TMB (0-10%,10-20%,20-50%,50-80%,80-90%,90-100%-quantile)
-```{r}
+#' 
+#' # 6 groups of K-M OS curves of LORIS / TMB (0-10%,10-20%,20-50%,50-80%,80-90%,90-100%-quantile)
+## ---------------------------------------------------------------------------
 ####### load data
 dataType = 'PanCancer_nonNSCLC'  # PanCancer_nonNSCLC   PanCancer_all
 LLRmodelNA = 'TMB' #  'LLR6'   'TMB'
@@ -875,5 +878,5 @@ HR_CI = exp(confint(scox))
 Z_value=scox_coef[4]
 P_value= pnorm(Z_value, lower.tail = FALSE) # to test if higher score has better survival
 print(paste0('HR_value: ', round(HR_value,2), '.  P_value: ', format(P_value, scientific = TRUE)))
-```
 
+#' 

@@ -70,7 +70,7 @@ if __name__ == "__main__":
     ########################## Read in data ##########################
     phenotype = ['OS0.5yr', 'OS1yr', 'OS2yr', 'OS3yr']
     cancer_type = 'all'
-    modelNA = "LR5noTMB"
+    modelNA = "LLR5noTMB"
     featuresNA_1 = ['Systemic_therapy_history', 'Albumin', 'NLR', 'Age', 'CancerType1',
                       'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
                       'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
@@ -81,7 +81,7 @@ if __name__ == "__main__":
                  'CancerType14', 'CancerType15', 'CancerType16'] + ['OS_Months', 'OS_Event', 'CancerType'] + phenotype
 
     print('Raw data processing ...')
-    data_fn = '../02.Input/AllData.xlsx'
+    data_fn = '02.Input/AllData.xlsx'
     dataICBtest1 = pd.read_excel(data_fn, sheet_name='Chowell_test', index_col=0)
     dataICBtest2 = pd.read_excel(data_fn, sheet_name='MSK1', index_col=0)
     dataICBtest = pd.concat([dataICBtest1, dataICBtest2], axis=0)
@@ -160,7 +160,7 @@ if __name__ == "__main__":
     y_LLR6pred_test_list = []
 
     ###################### Read in LLR6-ICB (1yrOS) model params ######################
-    fnIn = '../03.Results/6features/PanCancer/PanCancer_'+modelNA+'_10k_ParamCalculate.txt'
+    fnIn = '03.Results/6features/PanCancer/PanCancer_all_'+modelNA+'_10k_ParamCalculate.txt'
     params_data = open(fnIn, 'r').readlines()
     params_dict = {}
     for line in params_data:
@@ -187,7 +187,7 @@ if __name__ == "__main__":
         y_pred_test = clf.predict_proba(x_test_scaled_list[i])[:, 1]
         y_LLR6pred_test_list.append(y_pred_test)
         dataALL[i]['LLR6'] = y_pred_test
-        dataALL[i].to_csv('../03.Results/'+modelNA+'_predict_nonICB_vs_ICB_'+ cancer_type + '_Dataset'+str(i+1)+'.csv', index=True)
+        dataALL[i].to_csv('03.Results/'+modelNA+'_predict_nonICB_vs_ICB_'+ cancer_type + '_Dataset'+str(i+1)+'.csv', index=True)
 
     ################ Test AUC difference p value between models ######
     pval_list = []
@@ -199,7 +199,7 @@ if __name__ == "__main__":
     ############################## Plot ROC ##############################
     textSize = 8
     ############# Plot ROC curves ##############
-    output_fig1 = '../03.Results/PanCancer_'+modelNA+'_LORIS_ROC_AUC_nonICB_vs_ICB_OS.pdf'
+    output_fig1 = '03.Results/PanCancer_'+modelNA+'_LORIS_ROC_AUC_nonICB_vs_ICB_OS.pdf'
     rows, cols = 1, len(phenotype)
     fig1, ax1 = plt.subplots(rows, cols, figsize=(len(phenotype)*2+0.5, 2))
     ax1 = ax1.flatten()

@@ -75,19 +75,27 @@ if __name__ == "__main__":
                       'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
                       'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
                       'CancerType14', 'CancerType15', 'CancerType16']
-    xy_colNAs = ['TMB', 'Systemic_therapy_history', 'Albumin', 'NLR', 'Age', 'CancerType1',
+    xy_colNAs = (['TMB', 'Systemic_therapy_history', 'Albumin', 'NLR', 'Age', 'CancerType1',
                  'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
                  'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
-                 'CancerType14', 'CancerType15', 'CancerType16'] + ['OS_Months', 'OS_Event', 'CancerType'] + phenotype
+                 'CancerType14', 'CancerType15', 'CancerType16'] + ['OS_Months', 'OS_Event', 'CancerType','PFS_Months'] + phenotype)
 
     print('Raw data processing ...')
-    data_fn = '../02.Input/AllData.xlsx'
+    data_fn = '02.Input/AllData.xlsx'
     dataICBtest1 = pd.read_excel(data_fn, sheet_name='Chowell_test', index_col=0)
     dataICBtest2 = pd.read_excel(data_fn, sheet_name='MSK1', index_col=0)
     dataICBtest = pd.concat([dataICBtest1, dataICBtest2], axis=0)
+    #***MHJ start Save the extra cols
+    ##dataSave = dataICBtest[['OS_Months','OS_Event','PFS_Months','PFS_Event','TMB','PDL1_TPS(%)','Sex']]
+    #****MHJ End
     temp_df = dataICBtest[xy_colNAs[0:21]].astype(float)
     rows_valid = (temp_df.isnull().sum(axis=1) == 0)
-    dataICBtest = pd.concat([temp_df.loc[rows_valid, :], dataICBtest.loc[rows_valid, xy_colNAs[21:-4]]], axis=1)
+    #MHJ Start
+    #dataICBtest = pd.concat([temp_df.loc[rows_valid, :], dataICBtest.loc[rows_valid, xy_colNAs[21:-4]]], axis=1)
+    dset1 = temp_df.loc[rows_valid, :]
+    dset2 = xy_colNAs[21:-4]
+    dset3 = dataICBtest.loc[rows_valid, xy_colNAs[21:-4]]
+
 
     dataICBtest['OS0.5yr'] = np.nan
     dataICBtest.loc[(dataICBtest['OS_Months'] < 6) & (dataICBtest['OS_Event'] == 1),'OS0.5yr'] = 0
@@ -167,7 +175,7 @@ if __name__ == "__main__":
     y_LLR6pred_test_list = []
 
     ###################### Read in LLR6-ICB (1yrOS) model params ######################
-    fnIn = '../03.Results/6features/PanCancer/PanCancer_LLR6_10k_ParamCalculate.txt'
+    fnIn = '03.Results/6features/PanCancer/PanCancer_all_LLR6_10k_ParamCalculate.txt'
     params_data = open(fnIn, 'r').readlines()
     params_dict = {}
     for line in params_data:
@@ -194,7 +202,14 @@ if __name__ == "__main__":
         y_pred_test = clf.predict_proba(x_test_scaled_list[i])[:, 1]
         y_LLR6pred_test_list.append(y_pred_test)
         dataALL[i]['LLR6'] = y_pred_test
-        dataALL[i].to_csv('../03.Results/LLR6_predict_nonICB_vs_ICB_'+ cancer_type + '_Dataset'+str(i+1)+'.csv', index=True)
+        #** MHJ Start Add the saved columns
+        #dataALL[i][['OS_Months','OS_Event','PFS_Months','PFS_Event','TMB','PDL1_TPS(%)','Sex']]
+        #dataALL[i] = dataALL[i].assign(PFS_Months=dataSave['PFS_Months'],
+        #                               PFS_Event=dataSave['PFS_Event'])
+        #dataALL[i]['PFS_Months'] = dataSave['PFS_Months']
+
+        #** MHJ End
+        dataALL[i].to_csv('03.Results/LLR6_predict_nonICB_vs_ICB_'+ cancer_type + '_Dataset'+str(i+1)+'.csv', index=True)
 
     ################ Test AUC difference p value between models ######
     pval_list = []
@@ -206,7 +221,7 @@ if __name__ == "__main__":
     ############################## Plot ROC ##############################
     textSize = 8
     ############# Plot ROC curves ##############
-    output_fig1 = '../03.Results/PanCancer_LORIS_ROC_AUC_nonICB_vs_ICB_OS.pdf'
+    output_fig1 = '03.Results/PanCancer_LORIS_ROC_AUC_nonICB_vs_ICB_OS.pdf'
     rows, cols = 1, len(phenotype)
     fig1, ax1 = plt.subplots(rows, cols, figsize=(len(phenotype)*2+0.5, 2))
     ax1 = ax1.flatten()

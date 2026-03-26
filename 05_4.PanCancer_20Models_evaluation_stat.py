@@ -10,11 +10,12 @@
 import pandas as pd
 from scipy.stats import mannwhitneyu
 
-
-MLM_list = ['LLR6', 'LR5noTMB', 'TMB', 'LogisticRegression', 'DecisionTree','RF6', 'RF16_NBT',
-             'RandomForest', 'GBoost', 'AdaBoost', 'HGBoost', 'XGBoost','LightGBM', 'SupportVectorMachineRadial',
-             'kNearestNeighbourhood', 'NeuralNetwork1', 'NeuralNetwork2', 'NeuralNetwork3', 'NeuralNetwork4',
-             'GaussianProcess', "TabNet"]
+#MHJ reduced input
+#MLM_list = ['LLR6', 'LR5noTMB', 'TMB', 'LogisticRegression', 'DecisionTree','RF6', 'RF16_NBT',
+#             'RandomForest', 'GBoost', 'AdaBoost', 'HGBoost', 'XGBoost','LightGBM', 'SupportVectorMachineRadial',
+#             'kNearestNeighbourhood', 'NeuralNetwork1', 'NeuralNetwork2', 'NeuralNetwork3', 'NeuralNetwork4',
+#             'GaussianProcess', "TabNet"]
+MLM_list = ['LLR6', 'LR5noTMB', 'TMB']
 MLM_list1=['TMB', 'DecisionTree', 'RF6', 'RF16_NBT', 'RandomForest', 'ComplementNaiveBayes', 'MultinomialNaiveBayes',
            'GaussianNaiveBayes', 'BernoulliNaiveBayes', 'RF16_NBT'] # data scaling: None
 MLM_list2=['LLR6', 'LR5noTMB', 'LLR5noPSTH', 'LogisticRegression','GBoost', 'AdaBoost', 'HGBoost', 'XGBoost',
@@ -51,12 +52,12 @@ for MLM in MLM_list:
     else:
         raise Exception('MLM not recognized!')
     if MLM in ['LLR6', 'LR5noTMB', 'RF6', 'TMB']:
-        fnIn = '../03.Results/6features/PanCancer/ModelEvalResult_' + MLM + '_Scaler(' + SCALE + ')_CV' + str(
+        fnIn = '03.Results/6features/PanCancer/ModelEvalResult_' + MLM + '_Scaler(' + SCALE + ')_CV' + str(
             Kfold) + 'Rep' + str(N_repeat_KFold) + '_random' + str(randomSeed) + '.txt'
     elif MLM in ["TabNet"]:
-        fnIn = '../03.Results/16features/PanCancer/' + MLM + '_evaluation_2000R5CV_result.txt'
+        fnIn = '03.Results/16features/PanCancer/' + MLM + '_evaluation_2000R5CV_result.txt'
     else:
-        fnIn = '../03.Results/16features/PanCancer/ModelEvalResult_' + MLM + '_Scaler(' + SCALE + ')_CV' + str(
+        fnIn = '03.Results/16features/PanCancer/ModelEvalResult_' + MLM + '_Scaler(' + SCALE + ')_CV' + str(
             Kfold) + 'Rep' + str(N_repeat_KFold) + '_random' + str(randomSeed) + '.txt'
     if MLM not in ["TabNet"]:
         dataIn = open(fnIn, 'r').readlines()
@@ -111,8 +112,8 @@ for MLM in MLM_list:
     performance_df = pd.concat([performance_df, temp_df], axis=0)
 
 ##### write to file
-fnOut_test = '../03.Results/PanCancer_20Models_Performance_test.xlsx'
-fnOut_delta = '../03.Results/PanCancer_20Models_Performance_delta.xlsx'
+fnOut_test = '03.Results/PanCancer_20Models_Performance_test.xlsx'
+fnOut_delta = '03.Results/PanCancer_20Models_Performance_delta.xlsx'
 grouped = performance_df.groupby('method').agg({
     'AUC_test': ['mean', 'std'],
     'AUC_delta': ['mean', 'std'],

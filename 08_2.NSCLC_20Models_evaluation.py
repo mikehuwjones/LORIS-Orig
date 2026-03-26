@@ -62,7 +62,7 @@ if __name__ == "__main__":
 
     ################################################# 1. Data read in #################################################
     print('Raw data processing ...')
-    dataALL_fn = '../02.Input/AllData.xlsx'
+    dataALL_fn = '02.Input/AllData.xlsx'
     data_train1 = pd.read_excel(dataALL_fn, sheet_name='Chowell_train', index_col=0)
     data_train2 = pd.read_excel(dataALL_fn, sheet_name='Chowell_test', index_col=0)
     data_train = pd.concat([data_train1, data_train2], axis=0)
@@ -95,7 +95,7 @@ if __name__ == "__main__":
                     }
     ############## read-in the dictionary of optimal parameter combination from file ############
     if MLM not in ['GaussianProcess','LLR6', 'TMB', 'LLR5noTMB', 'RF16_NBT']:
-        HyperParam_fnIn = '../03.Results/16features/NSCLC/NSCLC_'+dataset+'_ModelParaSearchResult_' + MLM + \
+        HyperParam_fnIn = '03.Results/16features/NSCLC/NSCLC_'+dataset+'_ModelParaSearchResult_' + MLM + \
                           '_Scaler(' + SCALE + ')_CV' + str(Kfold)+'Rep'+\
                           str(N_repeat_KFold_paramTune) + '_random' + str(randomSeed) + '.txt'
         paramDict_line_str = 'Best params on CV sets:  '
@@ -129,10 +129,10 @@ if __name__ == "__main__":
 
     results_df = pd.DataFrame(search_cv.cv_results_)
     if MLM in ['LLR6', 'LLR5noTMB', 'RF6', 'TMB']:
-        model_eval_fn = '../03.Results/6features/NSCLC/NSCLC_'+dataset+'_ModelEvalResult_' + MLM + '_Scaler(' + SCALE +\
+        model_eval_fn = '03.Results/6features/NSCLC/NSCLC_'+dataset+'_ModelEvalResult_' + MLM + '_Scaler(' + SCALE +\
                         ')_CV' + str(Kfold) + 'Rep' + str(N_repeat_KFold) + '_random' + str(randomSeed) + '.txt'
     else:
-        model_eval_fn = '../03.Results/16features/NSCLC/NSCLC_'+dataset+'_ModelEvalResult_' + MLM + '_Scaler(' + SCALE \
+        model_eval_fn = '03.Results/16features/NSCLC/NSCLC_'+dataset+'_ModelEvalResult_' + MLM + '_Scaler(' + SCALE \
                         + ')_CV' +str(Kfold) + 'Rep' + str(N_repeat_KFold) + '_random' + str(randomSeed) + '.txt'
     results_df.to_csv(model_eval_fn, sep='\t')
     print('Model evaluation done! Time used: ',time.time()-start_time)

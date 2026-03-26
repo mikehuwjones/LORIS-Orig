@@ -54,7 +54,7 @@ if __name__ == "__main__":
                        "Stage", "Age", "Drug","Systemic_therapy_history", "HLA_LOH", "MSI", "Sex"]
 
     print('Raw data processing ...')
-    dataALL_fn = '../02.Input/AllData.xlsx'
+    dataALL_fn = '02.Input/AllData.xlsx'
     dataChowellTrain = pd.read_excel(dataALL_fn, sheet_name='Chowell_train', index_col=0)
     data_RF16_train = dataChowellTrain[featuresNA_RF16 + [phenoNA]]
     dataChowellTest = pd.read_excel(dataALL_fn, sheet_name='Chowell_test', index_col=0)
@@ -89,7 +89,7 @@ if __name__ == "__main__":
     y_LLR6pred_test = []
     y_RF16pred_test = []
     ###################### test LLR6 model performance ######################
-    fnIn = '../03.Results/6features/PanCancer/PanCancer_LLR6_10k_ParamCalculate.txt'
+    fnIn = '03.Results/6features/PanCancer/PanCancer_LLR6_10k_ParamCalculate.txt'
     params_data = open(fnIn,'r').readlines()
     params_dict = {}
     for line in params_data:
@@ -123,7 +123,7 @@ if __name__ == "__main__":
     ############################## Plot ##############################
     textSize = 8
     ############# Plot ROC curves ##############
-    output_fig1 = '../03.Results/PanCancer_LLR6_vs_RF16NBT_AUC_AUPRC_compare_'+plot_train_or_test+'.pdf'
+    output_fig1 = '03.Results/PanCancer_LLR6_vs_RF16NBT_AUC_AUPRC_compare_'+plot_train_or_test+'.pdf'
     ax1 = [0] * 2
     fig1, ((ax1[0], ax1[1])) = plt.subplots(1, 2, figsize=(3.7,1.7))
     fig1.subplots_adjust(left=0.15, bottom=0.25, right=0.97, top=0.96, wspace=0.37, hspace=0.5)
@@ -178,7 +178,7 @@ if __name__ == "__main__":
 
     ##################### correlation scatter plot between predicted scores from LLR6 and RF16 #####################
     textSize = 8
-    output_fig2 = '../03.Results/PanCancer_LLR6_vs_RF16NBT_scoreCorrelation_scatterPlot.pdf'
+    output_fig2 = '03.Results/PanCancer_LLR6_vs_RF16NBT_scoreCorrelation_scatterPlot.pdf'
 
     fig = plt.figure(figsize=(3, 3))
     gs = GridSpec(4, 4, left=0.2, bottom=0.15, right=0.96, top=0.96, wspace=0, hspace=0)
